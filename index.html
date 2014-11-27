@@ -1,0 +1,23 @@
+<html>
+<script src="js/three.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<head>
+		<title>Sound Scapes</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 50%; height: 50% }
+		</style>
+	</head>
+<body>
+<script src="js/setup_audio.js"></script>
+<script src="js/scene.js"></script>
+	<div>
+		<input id="audio_input_url"/>
+		<button id="submit_audio_button">
+			Play this audio!
+		</button>	
+		<input id="volume" type="range" min="0" max="1" step="0.1" value="0.5"/>
+	</div>
+	<canvas id="bar-graph-canvas" width="640" height="100"></canvas> 
+</body>
+</html>
