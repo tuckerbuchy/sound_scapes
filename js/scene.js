@@ -4,6 +4,11 @@ var mySphere4Geometry;
 var mySphere4;
 var radius = 5;
 
+
+
+
+var bumpMap = THREE.ImageUtils.loadTexture("images/squares.jpg");
+
 var g_startTime = Date.now();   // last time the function was called
 var g_time = 0;
 function update() {
@@ -53,16 +58,16 @@ $(document).ready(function(){
   
     // FLOOR WITH CHECKERBOARD 
 
-  var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );
-  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
-  floorTexture.repeat.set( 4, 4 );
-  var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
-  var floorGeometry = new THREE.PlaneGeometry(10, 10);
-  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.position.y = -0.1;
-  floor.rotation.x = Math.PI / 2;
-  scene.add(floor);
-  floor.parent = originBox;
+  // var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );
+  // floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+  // floorTexture.repeat.set( 4, 4 );
+  // var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+  // var floorGeometry = new THREE.PlaneGeometry(10, 10);
+  // var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  // floor.position.y = -0.1;
+  // floor.rotation.x = Math.PI / 2;
+  // scene.add(floor);
+  // floor.parent = originBox;
 
       // LIGHTS:  needed for phong illumination model
       // The following will be used by (1) three.js; and (2) your own shaders, passed via uniforms
@@ -86,7 +91,15 @@ $(document).ready(function(){
   var ambientLight = new THREE.AmbientLight(ambientColor.getHex());
   scene.add(ambientLight);
   mySphere4Material = new THREE.MeshPhongMaterial( 
-    {  ambient: kAmbient, color: kDiffuse, specular: kSpecular, color: k0,  shininess: 40, shading: THREE.SmoothShading });
+    {  ambient: kAmbient, 
+      color: kDiffuse, 
+      specular: kSpecular, 
+      color: k0, 
+      shininess: 40, 
+      shading: 
+      THREE.SmoothShading, 
+      bumpMap : bumpMap,
+      bumpScale : 0.1 });
   mySphere4Geometry = new THREE.SphereGeometry( radius, 32, 32 );
   mySphere4 = new THREE.Mesh( mySphere4Geometry, mySphere4Material );
   scene.add( mySphere4 );

@@ -10,8 +10,8 @@ var RATE = 44100;
 var FFTSIZE = 2048;
 var WIDTH = 640;
 var HEIGHT = 100;
-var BAND_LOWER = 400;
-var BAND_UPPER = 3000;
+var BAND_LOWER = 50;
+var BAND_UPPER = 500;
 var OCTAVES = 2;
 
 var FREQ_ALPHA = 0.95;
