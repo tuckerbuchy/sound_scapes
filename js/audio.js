@@ -10,9 +10,59 @@ var RATE = 44100;
 var FFTSIZE = 2048;
 var WIDTH = 640;
 var HEIGHT = 100;
-var BAND_LOWER = 40;
-var BAND_UPPER = 500;
+var BAND_LOWER = 400;
+var BAND_UPPER = 3000;
 var OCTAVES = 2;
+
+var FREQ_ALPHA = 0.95;
+var frequencyFilter = new IIRFilter(FREQ_ALPHA);
+
+var LOUDNESS_ALPHA = 0.95;
+var loudnessFilter = new IIRFilter(LOUDNESS_ALPHA);
+loudnessFilter.convertToDecibels = function(value){
+  if (value == 0 ){
+    return 0;
+  }
+  console.log("prev " + this.prev);
+  var db = 10 * Math.log(value / Math.abs(this.prev)) / Math.LN10;
+  return db;  
+} 
+
+function IIRFilter(alpha) {
+  this.alpha = alpha;
+  this.oldPrev = 1;
+  this.prev = 1;
+  this.update = function(value){
+    this.oldPrev = this.prev;
+    this.prev = (1-this.alpha) * value + this.alpha*this.prev;
+    return this.prev;
+  }
+}
+
+function HSVtoRGB(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (h && s === undefined && v === undefined) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.floor(r * 255),
+        g: Math.floor(g * 255),
+        b: Math.floor(b * 255)
+    };
+}
 
 var getFrequencyIndex = function(freq){
   return Math.round(freq/(RATE/FFTSIZE)); 
@@ -41,6 +91,14 @@ var getIndexOfDataArray = function(element, array){
   return -1;
 }
 
+var sumArray = function(array) {
+  var sum = 0;
+  for (var i = 0; i < array.length; i++){
+    sum += array[i];
+  }
+  return sum;
+}
+
 var mapFrequencyToHue = function(freq){  
   if (freq < BAND_LOWER){
     freq = BAND_LOWER
@@ -66,7 +124,9 @@ var configureAnalyser = function(){
 
 $(document).ready(function(){
   canvas = document.getElementById("bar-graph-canvas");
-  canvasCtx = canvas.getContext("2d");
+  if (canvas){
+    canvasCtx = canvas.getContext("2d");
+  }
 
   var source;
 
@@ -160,20 +220,32 @@ var graphBarFreq = function(dataArray) {
       x += barWidth + 1;
   }
 }
-var i = 0;
+var counter = 0;
 var processAudio = function() {
-  i++;
+  counter++;
   analyser.getByteTimeDomainData(dataArray);
+  //var c = dataArray / 128.0;
+  for(var i = 0; i < dataArray.length; i++) {
+        dataArray[i] = Math.abs(dataArray[i] - 128.0);
+  }
   //graphFreq(dataArray);
   //graphBarFreq(dataArray);
   var validFrequencies = dataArray.subarray(lowerBandIndex, upperBandIndex);
   var fundamentalValue = getMaxOfDataArray(validFrequencies);
-  var fundFreqIndex = getIndexOfDataArray(fundamentalValue, dataArray);
+  var fundFreqIndex = getIndexOfDataArray(fundamentalValue, validFrequencies);
   var fundamentalFrequency = getFrequencyFromIndex(fundFreqIndex);
-  hue = mapFrequencyToHue(fundamentalFrequency);
-  if (i % 50 == 0){
-    console.log("index:" + fundFreqIndex);
-    console.log(fundamentalFrequency);
-    console.log(hue);
-  }
+  var averagedFrequency = frequencyFilter.update(fundamentalFrequency)
+
+  var loudness = sumArray(validFrequencies);
+  console.log("loudness " + loudness);
+  var oldPrev = loudnessFilter.prev;
+  var loudnessInDb = loudnessFilter.convertToDecibels(loudness);
+
+  var averagedLoudness = loudnessFilter.update(loudnessInDb);
+  var loudnessRatio = averagedLoudness/oldPrev;
+
+  return {
+    frequency: averagedFrequency,
+    loudnessRatio: loudnessRatio
+  };
 }
